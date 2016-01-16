@@ -2,10 +2,14 @@ $fs = 1;
 $fa = 6;
 
 rackTubeD = 9.7;
-rackOD = [9.25 * 25.4 - rackTubeD, 12.0625 * 25.4 - rackTubeD];
-basketOD = [11.875 * 25.4, 14 * 25.4, 50];
-basketDelta = [basketOD[0] - rackOD[0], basketOD[1] - rackOD[1]];
+rackOD = [9.25 * 25.4 - rackTubeD, (12 + 1/32) * 25.4 - rackTubeD];
+basketOD = [(11 + 15/16) * 25.4, 14 * 25.4, 51.5];
 boxWall = 3.5;
+// distance from center of rack tube to outer box wall
+basketDelta = [
+    (basketOD[0] - rackOD[0])/2,
+    (basketOD[1] - rackOD[1])/2
+];
 boxFloatZ = 50;
 supportThick = 4;
 module rackRod(l, inflate=0) {
@@ -27,7 +31,7 @@ module moveBoxRight() {
     translate([0, basketOD[1]/2]) children();
 }
 module moveBoxLeft(dist = 1) {
-    translate([0, -dist * basketDelta[1]/2]) moveRackLeft() children();
+    translate([0, -dist * basketDelta[1]]) moveRackLeft() children();
 }
 module rack(inflate = 0) {
     moveRackRight() rackRodShort(inflate=inflate);
@@ -45,9 +49,13 @@ module rack(inflate = 0) {
 
 }
 module box(inflate=0) {
-    translate([0,0,25 + boxFloatZ]) difference() {
+    translate([
+        0,
+        0,
+        25 + boxFloatZ
+    ]) difference() {
         cube(size=basketOD, center=true);
-        cube(size=[basketOD[0] - 2*boxWall - inflate, basketOD[1] - 2*boxWall - inflate, 51], center=true);
+        cube(size=[basketOD[0] - 2*boxWall - inflate, basketOD[1] - 2*boxWall - inflate, basketOD[2] + 1], center=true);
     }
 }
 module moveUpArm(dist = 1) {
@@ -55,8 +63,8 @@ module moveUpArm(dist = 1) {
 }
 supportD = rackTubeD + supportThick*2;
 midSupportD = supportD * 0.75;
+wide = 15;
 module support() {
-    wide = 15;
     difference() {
         union() {
             hull() {
@@ -65,33 +73,71 @@ module support() {
             }
             hull() {
                 moveUpArm() rotate([0, 90]) cylinder(d=midSupportD, h=wide, center=true);
-                translate([0,supportD/4,boxFloatZ + basketOD[2] - supportD/4]) moveBoxLeft() rotate([0, 90]) cylinder(d=supportD/2, h=wide, center=true);
+                translate([0,supportD/4,boxFloatZ + basketOD[2] - supportD/4 - 5]) moveBoxLeft() rotate([0, 90]) cylinder(d=supportD/2, h=wide, center=true);
             }
         }
         box();
         rack(0.25);
         // screws to affix the basket
-        translate([0,0,boxFloatZ + basketOD[2]/4]) moveBoxLeft() rotate([90,0,0]) cylinder(d=4, h=100, center=true);
-        translate([0,0,boxFloatZ + 3 * basketOD[2]/4]) moveBoxLeft() rotate([90,0,0]) cylinder(d=4, h=100, center=true);
+        translate([
+            0,
+            0,
+            boxFloatZ + (basketOD[2] - 25.4)/2
+        ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=3.5, h=100, center=true);
+        translate([
+            0,
+            0,
+            boxFloatZ +(basketOD[2] - 25.4)/2 + 25.4 // screw holes 1" apart
+        ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=3.5, h=100, center=true);
 
-        moveRackLeft() {
-            rotate([-135]) {
-                hull() {
-                    rackRodShort(25, inflate=-3);
-                    translate([0,0,15]) rackRodShort(25, inflate=3);
+        // clip around the rack tube
+        moveRackLeft() moveRackLeft() rotate([180]) {
+            hull() {
+                moveUpArm(0) rackRodShort(25, inflate=-6);
+                moveUpArm(0.15) rackRodShort(25, inflate=1);
+            }
+        }
+        // gap that the screw will bridge
+        hull() {
+            moveUpArm(0) rackRodShort(25, inflate=2 - rackTubeD);
+            moveUpArm(0.5) rackRodShort(25, inflate=2 - rackTubeD);
+        }
+        // screw to clamp support to rack tube
+        moveUpArm(0.165) {
+            rotate([-atan(boxFloatZ / (basketDelta[0] - boxWall - midSupportD)),0,0]) {
+                translate([0, 0, -supportD/2 + 5]) rotate([-180]) {
+                    // thread hole
+                    translate([0,0,-12.75]) cylinder(d=3.5, h=12.75, center=false);
+                    // m4 screw head
+                    cylinder(d=8.5, h=10, center=false);
+
                 }
-            }
-            rotate([0, 90]) difference() {
-                cylinder(d=supportD + 0.1, h=6, center=true);
-                cylinder(d=supportD - 4, h=7, center=true);
+                // m4 nut
+                *translate([0,0,supportD/2 - 4]) cylinder(d=8.25/cos(180/6), $fn=6, h=10, center=false);
+
 
             }
         }
-        #hull() {
-            moveUpArm(0.25) rotate([0, 90]) cylinder(d=rackTubeD - 2, h=wide+1, center=true);
-            moveUpArm(0.85) rotate([0, 90]) cylinder(d=rackTubeD - 4, h=wide+1, center=true);
+        // zip-tie
+        *zipTieCutout();
+        // bungee-hook cutout
+        bungeeHookCutout();
+
+    }
+}
+module zipTieCutout() {
+    moveRackLeft() {
+        rotate([0, 90]) difference() {
+            cylinder(d=supportD + 0.1, h=6, center=true);
+            cylinder(d=supportD - 4, h=7, center=true);
 
         }
+    }
+}
+module bungeeHookCutout() {
+    hull() {
+        moveUpArm(0.3) rotate([0, 90]) cylinder(d=rackTubeD - 2, h=wide+1, center=true);
+        moveUpArm(0.85) rotate([0, 90]) cylinder(d=rackTubeD - 4, h=wide+1, center=true);
 
     }
 }
