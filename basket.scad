@@ -69,7 +69,7 @@ module support() {
             }
         }
         box();
-        rack(0.5);
+        rack(0.25);
         // screws to affix the basket
         translate([0,0,boxFloatZ + basketOD[2]/4]) moveBoxLeft() rotate([90,0,0]) cylinder(d=4, h=100, center=true);
         translate([0,0,boxFloatZ + 3 * basketOD[2]/4]) moveBoxLeft() rotate([90,0,0]) cylinder(d=4, h=100, center=true);
@@ -77,8 +77,8 @@ module support() {
         moveRackLeft() {
             rotate([-135]) {
                 hull() {
-                    rackRodShort(25, inflate=-4);
-                    translate([0,0,15]) rackRodShort(25, inflate=2);
+                    rackRodShort(25, inflate=-3);
+                    translate([0,0,15]) rackRodShort(25, inflate=3);
                 }
             }
             rotate([0, 90]) difference() {
@@ -123,8 +123,12 @@ module m4PanHeadScrew(length = 20) {
         throughLen = length
     );
 }
-!translate([0,150,0])
-support();
+!for (yy=[0:25:75]) {
+    translate([yy/4,150 + yy,0])
+    rotate([0,90])
+    support();
+}
+
 rotate([0,0,180]) support();
 translate([-(basketOD[1] - basketOD[0])/2,0,0]) rotate([0,0,90]) support();
 #box();
