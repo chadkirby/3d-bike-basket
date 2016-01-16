@@ -64,6 +64,18 @@ module moveUpArm(dist = 1) {
 supportD = rackTubeD + supportThick*2;
 midSupportD = supportD * 0.75;
 wide = 15;
+module basketScrews(d=3.5) {
+    translate([
+        0,
+        0,
+        boxFloatZ + (basketOD[2] - 25.4)/2
+    ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=d, h=100, center=true);
+    translate([
+        0,
+        0,
+        boxFloatZ +(basketOD[2] - 25.4)/2 + 25.4 // screw holes 1" apart
+    ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=d, h=100, center=true);
+}
 module support() {
     difference() {
         union() {
@@ -79,22 +91,13 @@ module support() {
         box();
         rack(0.25);
         // screws to affix the basket
-        translate([
-            0,
-            0,
-            boxFloatZ + (basketOD[2] - 25.4)/2
-        ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=3.5, h=100, center=true);
-        translate([
-            0,
-            0,
-            boxFloatZ +(basketOD[2] - 25.4)/2 + 25.4 // screw holes 1" apart
-        ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=3.5, h=100, center=true);
+        basketScrews();
 
         // clip around the rack tube
-        moveRackLeft() moveRackLeft() rotate([180]) {
+        #moveRackLeft() moveRackLeft() rotate([180]) {
             hull() {
                 moveUpArm(0) rackRodShort(25, inflate=-6);
-                moveUpArm(0.15) rackRodShort(25, inflate=1);
+                moveUpArm(0.15) rackRodShort(25, inflate=-3);
             }
         }
         // gap that the screw will bridge
@@ -138,45 +141,32 @@ module zipTieCutout() {
 }
 module bungeeHookCutout() {
     hull() {
-        moveUpArm(0.3) rotate([0, 90]) cylinder(d=rackTubeD - 2, h=wide+1, center=true);
+        moveUpArm(0.3) rotate([0, 90]) cylinder(d=rackTubeD - 3, h=wide+1, center=true);
         moveUpArm(0.85) rotate([0, 90]) cylinder(d=rackTubeD - 4, h=wide+1, center=true);
 
     }
 }
-
-
-module screw(headD, nutFlat = 0, throughHoleD, threadD, throughLen = 0, threadLen = 0, headLen, nutLen) {
-    // head
-    translate([0, 0, -headLen]) cylinder(d=headD, h=headLen, center=false);
-    // through hole
-    cylinder(d=throughHoleD, h=throughLen, center=false);
-    // through
-    /*translate([0, 0, -throughLen]) cylinder(d=threadD, h=threadLen, center=false);*/
-    translate([0, 0, throughLen])
-        if (nutFlat > 0) {
-            // nut
-            cylinder(d=nutFlat/cos(180/6), h=nutLen, center=false, $fn=6);
-        } else {
-            // thread
-            cylinder(d=threadD, h=threadLen, center=false);
+module screwGuide() {
+    difference() {
+        moveBoxLeft() hull() {
+            translate([-10,0,boxFloatZ - 2]) {
+                cube(size=[20, 5, basketOD[2] + 4], center=false);
+                translate([-20, 5, basketOD[2]/2]) rotate([90]) cylinder(d=30, h=5, center=false);
+            }
         }
+        #basketScrews();
+        #box();
+    }
 }
-module m4PanHeadScrew(length = 20) {
-    translate([-length/2, 0, 0]) rotate([0, 90, 0]) screw(
-        headD = 9.3,
-        headLen = 100,
-        nutFlat = 7.25,
-        throughHoleD = 5,
-        nutLen = 100,
-        throughLen = length
-    );
-}
-!for (yy=[0:25:75]) {
+
+
+for (yy=[0:25:75]) {
     translate([yy/4,150 + yy,0])
     rotate([0,90])
     support();
 }
 
-rotate([0,0,180]) support();
-translate([-(basketOD[1] - basketOD[0])/2,0,0]) rotate([0,0,90]) support();
-#box();
+*rotate([-90]) screwGuide();
+
+*translate([-(basketOD[1] - basketOD[0])/2,0,0]) rotate([0,0,90]) support();
+*box();
