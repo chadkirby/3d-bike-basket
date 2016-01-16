@@ -108,6 +108,8 @@ module support() {
                 translate([0, 0, -supportD/2 + 5]) rotate([-180]) {
                     // thread hole
                     translate([0,0,-12.75]) cylinder(d=3.5, h=12.75, center=false);
+                    // through hole
+                    translate([0,0,-4]) cylinder(d=5, h=4, center=false);
                     // m4 screw head
                     cylinder(d=8.5, h=10, center=false);
 
