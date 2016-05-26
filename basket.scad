@@ -17,7 +17,6 @@ basketDelta = [
     (basketOD[0] - rackOD[0])/2,
     (basketOD[1] - rackOD[1])/2
 ];
-echo(str("Variable = ", basketDelta));
 boxFloatZ = 50;
 supportThick = 4;
 module rackRod(l, inflate=0) {
@@ -77,11 +76,18 @@ module moveUpArm0(dist = 1) {
     translate([0, dist * midSupportD/2, dist * boxFloatZ]) moveBoxLeft(dist) children();
 }
 module moveUpArm(dist = 1, direction = 0) {
-    translate([0, dist * midSupportD/2, dist * boxFloatZ]) {
+    rr = direction == 1 ? basketDelta[0] - 7 : basketDelta[1] - 7;
+    straightDist = (boxFloatZ - rr);
+    xyz = dist > 0.25 ? [
+        0, -rr, rr + (dist - 0.25)/0.75 * straightDist
+    ] : [
+        0, rr * cos(-90 - dist * 360), rr + rr * sin(-90 - dist * 360)
+    ];
+    translate(xyz) {
         if (direction == 0) {
-            moveBoxLeft(dist) children();
+            moveBoxLeft(0) children();
         } else {
-            moveBoxFront(dist) children();
+            moveBoxFront(0) children();
         }
     }
 }
@@ -104,10 +110,23 @@ module basketScrews(d=3.5) {
 module support(direction = 0) {
     difference() {
         union() {
-            hull() {
-                moveRackLeft() rotate([0, 90]) cylinder(d=supportD, h=wide, center=true);
-                moveUpArm(direction = direction, dist = 1) rotate([0, 90]) cylinder(d=midSupportD, h=wide, center=true);
+            for (dd=[0.0:0.05:0.25]) {
+                hull() {
+                    moveUpArm(direction = direction, dist = dd)
+                        rotate([0, 90]) cylinder(d=supportD - (dd * (supportD - midSupportD)), h=wide, center=true);
+                    moveUpArm(direction = direction, dist = dd + 0.05)
+                        rotate([0, 90]) cylinder(d=supportD - ((dd + 0.05) * (supportD - midSupportD)), h=wide, center=true);
+                }
             }
+            hull() {
+                moveUpArm(direction = direction, dist = 0.25)
+                    rotate([0, 90]) cylinder(d=supportD - (0.25 * (supportD - midSupportD)), h=wide, center=true);
+
+                moveUpArm(direction = direction, dist = 1)
+                    rotate([0, 90]) cylinder(d=midSupportD, h=wide, center=true);
+
+            }
+
             hull() {
                 moveUpArm(direction = direction, dist = 1) rotate([0, 90]) cylinder(d=midSupportD, h=wide, center=true);
                 translate([0, -2, basketOD[2] - supportD/4 - 5]) moveUpArm(direction = direction, dist = 1) rotate([0, 90]) cylinder(d=supportD/2, h=wide, center=true);
@@ -126,24 +145,28 @@ module support(direction = 0) {
         moveRackLeft() moveRackLeft() rotate([180]) {
             hull() {
                 moveUpArm(direction = direction, dist = 0) rackRodShort(25, inflate=-6);
-                moveUpArm(direction = direction, dist = 0.15) rackRodShort(25, inflate=-3);
+                translate([0,-10,0])
+                moveUpArm(direction = direction, dist = 0) rackRodShort(25, inflate=-3);
             }
         }
         // gap that the screw will bridge
-        hull() {
-            moveUpArm(direction = direction, dist = 0) rackRodShort(25, inflate=2 - rackTubeD);
-            moveUpArm(direction = direction, dist = 0.5) rackRodShort(25, inflate=2 - rackTubeD);
+        for (dd=[0.0:0.05:0.25]) {
+            hull() {
+                moveUpArm(direction = direction, dist = dd)
+                    rackRodShort(25, inflate=2 - rackTubeD);
+                moveUpArm(direction = direction, dist = dd + 0.05)
+                    rackRodShort(25, inflate=2 - rackTubeD);
+            }
         }
+
         // screw to clamp support to rack tube
-        moveUpArm(direction = direction, dist = 0.165) {
+        moveUpArm(direction = direction, dist = 0.08) {
             rotate([
-                // direction thing is a total kludge
-                // can't quite figure out the geometry
-                -atan(boxFloatZ / (basketDelta[0] + (direction * 10) - boxWall - midSupportD)),
+                -360 * 0.08,
                 0,
                 0
             ]) {
-                translate([0, 0, -supportD/2 + 5]) rotate([-180]) {
+                translate([0, 0, -3]) rotate([-180]) {
                     // thread hole
                     translate([0,0,-12.75]) cylinder(d=3.5, h=102.75, center=false);
                     // through hole
@@ -176,8 +199,8 @@ module zipTieCutout() {
 }
 module bungeeHookCutout(direction) {
     hull() {
-        moveUpArm(direction = direction, dist = 0.3) rotate([0, 90]) cylinder(d=rackTubeD - 3, h=wide+1, center=true);
-        moveUpArm(direction = direction, dist = 0.85) rotate([0, 90]) cylinder(d=rackTubeD - 4, h=wide+1, center=true);
+        moveUpArm(direction = direction, dist = 0.25) rotate([0, 90]) cylinder(d=rackTubeD - 3, h=wide+1, center=true);
+        moveUpArm(direction = direction, dist = 0.5) rotate([0, 90]) cylinder(d=rackTubeD - 4, h=wide+1, center=true);
 
     }
 }
@@ -195,17 +218,18 @@ module screwGuide() {
 }
 
 
-for (yy=[0:25:75]) {
-    translate([yy/4,150 + yy,0])
+*for (yy=[0:25:75]) {
+    translate([yy,150 + yy,0])
     rotate([0,90])
-    support(1);
+    support(0);
 }
 
 *rotate([-90]) screwGuide();
 
 *translate([-(basketOD[1] - basketOD[0])/2,0,0]) rotate([0,0,90]) support();
-*support(0);
+//rotate([0,90])
+support(0);
 *translate([rackOD[0]/2, 0, 0]) rotate([0,0,-90]) moveRackLeft() rotate([0,0,180]) support(1);
-*rotate([0,0,180]) translate([rackOD[0]/2, 0, 0]) rotate([0,0,-90]) moveRackLeft() rotate([0,0,180]) support(1);
+rotate([0,0,180]) translate([rackOD[0]/2, 0, 0]) rotate([0,0,-90]) moveRackLeft() rotate([0,0,180]) support(1);
 %box();
 %rack();
