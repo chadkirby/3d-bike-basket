@@ -100,12 +100,15 @@ module basketScrews(d=3.5) {
         0,
         0,
         boxFloatZ + (basketOD[2] - 25.4)/2
-    ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=d, h=100, center=true);
+    ]) moveBoxLeft() screw(d);
     translate([
         0,
         0,
         boxFloatZ +(basketOD[2] - 25.4)/2 + 25.4 // screw holes 1" apart
-    ]) moveBoxLeft() rotate([90,0,0]) cylinder(d=d, h=100, center=true);
+    ]) moveBoxLeft() screw(d);
+}
+module screw(d=3.5) {
+    rotate([90,0,0]) cylinder(d=d, h=100, center=true);
 }
 module support(direction = 0) {
     difference() {
