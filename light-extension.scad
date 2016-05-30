@@ -122,12 +122,12 @@ module supportBase(h = 10) {
     cylinder(d=width, $fn=6, h=h, center=false);
 }
 module moveToHook() {
-    translate([-28, 0, 65]) children();
+    translate([-28, 0, 77]) children();
 }
 hookH = width * cos(180/6);
 module supportHook() {
     moveToHook()
-    ry() cylinder(d=15.5, h=hookH, center=true);
+    ry() cylinder(d=15, h=hookH, center=true);
 }
 module lightSupport() {
     difference() {
@@ -142,7 +142,7 @@ module lightSupport() {
 
         moveToHook()
         ry() {
-            cylinder(d=10.5, h=hookH + 1, center=true);
+            cylinder(d=9.9, h=hookH + 1, center=true);
             hull() {
                 cylinder(d=5, h=hookH + 1, center=true);
 
@@ -154,8 +154,8 @@ module lightSupport() {
     }
 }
 *lightClip();
-piece0();
-piece1();
-*my(-len/2)
+*piece0();
+*piece1();
+my(-len/2)
 ry()
 lightSupport();
