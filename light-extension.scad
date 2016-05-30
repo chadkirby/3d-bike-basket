@@ -10,6 +10,15 @@ module ry(ii = 1) {
 module rx(ii = 1) {
     rotate([0,ii * 90]) children();
 }
+module mz(zz) {
+    translate([0, 0, zz]) children();
+}
+module mx(xx) {
+    translate([xx, 0]) children();
+}
+module my(yy) {
+    translate([0, yy]) children();
+}
 
 module moveBack(dims = [0, 0, 0]) {
     translate([0 + dims[0], -95 + dims[1], dims[2] ? dims[2] : 0]) children();
@@ -109,6 +118,44 @@ module piece1() {
         }
     }
 }
-//lightClip();
-piece0();
-piece1();
+module supportBase(h = 10) {
+    cylinder(d=width, $fn=6, h=h, center=false);
+}
+module moveToHook() {
+    translate([-28, 0, 65]) children();
+}
+hookH = width * cos(180/6);
+module supportHook() {
+    moveToHook()
+    ry() cylinder(d=15.5, h=hookH, center=true);
+}
+module lightSupport() {
+    difference() {
+        hull() {
+            supportBase(5);
+            supportHook();
+        }
+        cylinder(d=5, h=100, center=true);
+        mz(5)
+        cylinder(d1=10, d2=20, h=50, center=false);
+
+
+        moveToHook()
+        ry() {
+            cylinder(d=10.5, h=hookH + 1, center=true);
+            hull() {
+                cylinder(d=5, h=hookH + 1, center=true);
+
+                translate([-30, -60, 0])
+                cylinder(d=100, h=hookH+1, center=true);
+            }
+        }
+
+    }
+}
+lightClip();
+//piece0();
+//piece1();
+!my(-len/2)
+ry()
+lightSupport();
