@@ -73,10 +73,10 @@ module lightClip() {
         rotate([1/tan(35/15),0,0])
         hull() {
             translate([0, 10])
-            cylinder(d=10, h=25, center=true);
+            cylinder(d=11, h=25, center=true);
 
             translate([0, -15])
-            cylinder(d=10, h=25, center=true);
+            cylinder(d=11, h=25, center=true);
         }
 
         rackMount();
@@ -94,7 +94,7 @@ module lightClip() {
     }
 }
 module selector() {
-    translate([-3.75, 0])
+    translate([-3.25, 0])
     cube(size=[width, 300, 100], center=true);
 }
 module piece0() {
@@ -109,8 +109,8 @@ module piece0() {
     }
 }
 module piece1() {
-    translate([20, -len])
-    rotate([0, 90, 180]) {
+    translate([20, 0, -width + 3.25])
+    rotate([0, -90, 0]) {
         difference() {
             lightClip();
             selector();
@@ -153,9 +153,9 @@ module lightSupport() {
 
     }
 }
-lightClip();
-//piece0();
-//piece1();
-!my(-len/2)
+*lightClip();
+piece0();
+piece1();
+*my(-len/2)
 ry()
 lightSupport();
